@@ -21,6 +21,8 @@ import sys
 import time
 import types
 import atexit
+import pwd
+import grp
 from gzip import GzipFile
 from StringIO import StringIO
 from optparse import OptionParser
@@ -46,7 +48,7 @@ NLOG = []
 NLOGLINES = 0
 ALLOW_ORIGIN = None
 PID_FILE = "nagios-api.pid"
-CFG_DIRECTORY = "/usr/local/nagios/etc/objects"
+CFG_DIRECTORY = "/home/szymon/nagios/etc/objects"
 
 def _send_json(req, success, content):
     '''Internal JSON sender.
@@ -148,9 +150,18 @@ def http_host(req, objid, reqobj):
             ret['services'].append(svc)
     return json_response(req, ret)
 
+def _mkdir_recursive(self, path):
+    sub_path = os.path.dirname(path)
+    if not os.path.exists(sub_path):
+        self._mkdir_recursive(sub_path)
+    if not os.path.exists(path):
+        os.mkdir(path)
+
 def http_update_host(req, objid, reqobj):
 
     global CFG_DIRECTORY
+
+    _mkdir_recursive(None, CFG_DIRECTORY)
     file_name = reqobj['file_name']
     text = reqobj['text']
 
@@ -166,16 +177,25 @@ def http_update_host(req, objid, reqobj):
         os.remove(file_path)
 
     try:
-        file(file_path, 'w').write(text)
+        f = file(file_path, 'w')
+        f.write(text)
+        f.close()
+
+        sys.stdout.write("file saved %s " % file_name)
 
         uid = pwd.getpwnam("nagios").pw_uid
         gid = grp.getgrnam("nagios").gr_gid
-        os.chown(file_path, uid, gid)
+
+        if uid and gid:
+            os.chown(file_path, uid, gid)
 
         ret = {}
         ret['message'] = "Update file "+file_path
         return json_response(req, ret)
     except Exception as e:
+        sys.stderr.write("%s\n" % e)
+        sys.stderr.write("Unable to write file: %s\n" % file_name)
+
         ret = {}
         ret['message'] = "Unable to write file: "+file_path
         return json_response(req, ret)
