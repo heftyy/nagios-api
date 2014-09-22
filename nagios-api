@@ -159,7 +159,7 @@ def _mkdir_recursive(self, path):
         os.mkdir(path)
 
 def http_restart_nagios(req, objid, reqobj):
-    output = subprocess.check_output('service','nagios','restart')
+    output = subprocess.check_output('service nagios restart')
 
     ret = {}
     ret['message'] = output
