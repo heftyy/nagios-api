@@ -162,7 +162,7 @@ def http_restart_nagios(req, objid, reqobj):
     output = subprocess.check_output('service','nagios','restart')
 
     ret = {}
-    ret = ['message'] = output
+    ret['message'] = output
     return json_response(req, ret)
 
 def http_update_host(req, objid, reqobj):
