@@ -23,6 +23,7 @@ import types
 import atexit
 import pwd
 import grp
+import subprocess
 from gzip import GzipFile
 from StringIO import StringIO
 from optparse import OptionParser
@@ -156,6 +157,13 @@ def _mkdir_recursive(self, path):
         _mkdir_recursive(self, sub_path)
     if not os.path.exists(path):
         os.mkdir(path)
+
+def http_restart_nagios(req, objid, reqobj):
+    output = subprocess.check_output('service','nagios','restart')
+
+    ret = {}
+    ret = ['message'] = output
+    return json_response(req, ret)
 
 def http_update_host(req, objid, reqobj):
 
@@ -803,7 +811,8 @@ def http_handler(req):
             'state': http_state,
             'objects': http_objects,
             'host': http_host,
-            'service': http_service
+            'service': http_service,
+            'restart_nagios': http_restart_nagios
         },
         'POST': {
             'cancel_downtime': http_cancel_downtime,
