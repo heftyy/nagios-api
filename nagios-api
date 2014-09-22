@@ -48,7 +48,7 @@ NLOG = []
 NLOGLINES = 0
 ALLOW_ORIGIN = None
 PID_FILE = "nagios-api.pid"
-CFG_DIRECTORY = "/home/szymon/nagios/etc/objects"
+CFG_DIRECTORY = "/usr/local/nagios/etc/objects"
 
 def _send_json(req, success, content):
     '''Internal JSON sender.
