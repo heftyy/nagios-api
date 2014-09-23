@@ -164,6 +164,16 @@ def http_restart_nagios(req, objid, reqobj):
     else:
         return json_response(req, 'Restart successful')
 
+def http_send_raw_command(req, objid, reqbj):
+    command = reqobj['command']
+    if not command:
+        return json_error(req, "Missing command to send to nagios")
+
+    if not send_nagios_command(command):
+        return json_error(req, "Nagios command failed")
+
+    return json_response(req, "Nagios command succeeded")
+
 def http_update_host(req, objid, reqobj):
 
     global CFG_DIRECTORY
@@ -825,7 +835,8 @@ def http_handler(req):
             'add_comment': http_add_comment,
             'delete_comment': http_delete_comment,
             'schedule_check': http_schedule_check,
-            'update_host': http_update_host
+            'update_host': http_update_host,
+            'raw_command': http_send_raw_command
         }
     }
 
