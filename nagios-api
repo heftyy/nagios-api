@@ -159,11 +159,10 @@ def _mkdir_recursive(self, path):
         os.mkdir(path)
 
 def http_restart_nagios(req, objid, reqobj):
-    output = subprocess.Popen(["/etc/init.d/nagios", "restart"], bufsize=128, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-
-    ret = {}
-    ret['message'] = output
-    return json_response(req, ret)
+    if not send_nagios_command('RESTART_PROGRAM'):
+        return json_error(req, 'Restart failed.')
+    else:
+        return json_response(req, 'Restart successful')
 
 def http_update_host(req, objid, reqobj):
 
