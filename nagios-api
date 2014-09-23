@@ -842,8 +842,10 @@ def send_nagios_command(*args):
     '''
     global CMDFILE, CMD_ENABLED
     if not CMD_ENABLED:
+        log.error('Command is disabled')
         return False  # May not be enabled.
-    if len(args) < 2:
+    if len(args) < 1:
+        log.error('Not enough parameters to send command')
         return False
     arg = '[%d] ' % int(time.time()) + ';'.join(unicode(j) for j in args)
     arg = arg.encode('utf-8')
