@@ -10,7 +10,7 @@ class Nagios:
     from the status file that Nagios maintains.
 
     '''
-    def __init__(self, statusfile):
+    def __init__(self, statusfile=None):
         '''Create a new Nagios state store.  One argument, statusfile, is used to
         indicate where the status file is.  This object is intended to be read-only
         once it has been created.
@@ -22,7 +22,7 @@ class Nagios:
         self.services = {}
         self.comments = {}
         self.downtimes = {}
-        if os.path.isfile(statusfile):
+        if statusfile is not None:
             self._update(statusfile)
 
     def _update(self, statusfile):

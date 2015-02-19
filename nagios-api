@@ -893,7 +893,7 @@ def read_status(statusfile):
     mtime = None
     while True:
         if not os.path.isfile(statusfile):
-            NAGIOS = Nagios()
+            NAGIOS = Nagios(None)
             continue
 
         stat = os.stat(statusfile)
