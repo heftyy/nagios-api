@@ -61,6 +61,8 @@ class Nagios:
                 yield cur
 
         f = open(statusfile, 'r')
+        self.info = {}
+        self.program = {}
         for obj in next_stanza(f):
             host = obj['host_name'] if 'host_name' in obj else None
             service = obj['service_description'] if 'service_description' in obj else None
