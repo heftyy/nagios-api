@@ -892,6 +892,10 @@ def read_status(statusfile):
     global NAGIOS
     mtime = None
     while True:
+        if not os.path.isfile(statusfile):
+            NAGIOS = Nagios()
+            continue
+
         stat = os.stat(statusfile)
         if mtime is None or stat.st_mtime > mtime:
             try:
