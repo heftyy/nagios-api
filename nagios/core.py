@@ -16,8 +16,8 @@ class Nagios:
         once it has been created.
 
         '''
-        self.info = Info(None)
-        self.program = Program(None)
+        self.info = Info({})
+        self.program = Program({})
         self.hosts = {}
         self.services = {}
         self.comments = {}
