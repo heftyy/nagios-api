@@ -2,6 +2,8 @@
 #
 # core Nagios classes.
 #
+import os
+
 
 class Nagios:
     '''This class represents the current state of a Nagios installation, as read
@@ -14,11 +16,14 @@ class Nagios:
         once it has been created.
 
         '''
+        self.info = {}
+        self.program = {}
         self.hosts = {}
         self.services = {}
         self.comments = {}
         self.downtimes = {}
-        self._update(statusfile)
+        if os.path.isfile(statusfile):
+            self._update(statusfile)
 
     def _update(self, statusfile):
         '''Read the status file from Nagios and parse it.  Responsible for building
