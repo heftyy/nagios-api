@@ -125,7 +125,8 @@ def http_status(req, objid, reqobj):
     if objid is not None:
         return json_error(req, 'Unexpected object ID.')
     ret = {}
-    ret['info'] = NAGIOS.info
+    ret['info'] = NAGIOS.info.for_json()
+    ret['program'] = NAGIOS.program.for_json()
     return json_response(req, ret)
 
 
