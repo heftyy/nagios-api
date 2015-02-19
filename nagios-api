@@ -126,7 +126,6 @@ def http_status(req, objid, reqobj):
         return json_error(req, 'Unexpected object ID.')
     ret = {}
     ret['info'] = NAGIOS.info
-    ret['program'] = NAGIOS.program
     return json_response(req, ret)
 
 
