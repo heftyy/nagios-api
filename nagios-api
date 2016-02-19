@@ -174,12 +174,8 @@ def restart_service(name):
     subprocess.call(command, shell=False)
 
 def http_restart_nagios(req, objid, reqobj):
-    if not send_nagios_command('RESTART_PROGRAM'):
-        print("Nagios is offline, restarting using service nagios restart")
-        restart_service('nagios')
-        return json_error(req, 'Restart failed.')
-    else:
-        return json_response(req, 'Restart successful')
+    restart_service('nagios')
+    return json_response(req, 'Restart successful')
 
 def http_send_raw_command(req, objid, reqbj):
     command = reqobj['command']
