@@ -169,7 +169,7 @@ def _mkdir_recursive(self, path):
         os.mkdir(path)
 
 def restart_service(name):
-    command = ['/usr/sbin/service', name, 'restart'];
+    command = ['/usr/sbin/service', name, 'restart']
     # shell=FALSE for sudo to work.
     subprocess.call(command, shell=False)
 
