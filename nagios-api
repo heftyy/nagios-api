@@ -168,10 +168,15 @@ def _mkdir_recursive(self, path):
     if not os.path.exists(path):
         os.mkdir(path)
 
+def restart_service(name):
+    command = ['/usr/sbin/service', name, 'restart'];
+    # shell=FALSE for sudo to work.
+    subprocess.call(command, shell=False)
+
 def http_restart_nagios(req, objid, reqobj):
     if not send_nagios_command('RESTART_PROGRAM'):
-        print "Nagios is offline, restarting using service nagios restart";
-        subprocess.Popen("service nagios restart", shell=True, stdout=subprocess.PIPE)
+        print("Nagios is offline, restarting using service nagios restart")
+        restart_service('nagios')
         return json_error(req, 'Restart failed.')
     else:
         return json_response(req, 'Restart successful')
