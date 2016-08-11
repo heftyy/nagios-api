@@ -1,0 +1,9 @@
+/.vagrant
+/debian/nagios-api/
+/debian/*.debhelper
+/debian/*.log
+*.pyc
+/dist/
+/debian/files
+/debian/*.substvars
+

@@ -11,6 +11,7 @@ Originally from:
 
 Copyright (c) 2011-2012 by Bump Technologies, Inc and other authors and
 contributors. See the LICENSE file for full licensing information.
+
 '''
 
 
@@ -21,6 +22,9 @@ import sys
 import time
 import types
 import atexit
+import urllib
+import pwd
+import grp
 import pwd
 import grp
 import subprocess
@@ -36,20 +40,17 @@ from nagios import Comment, Downtime, Nagios
 from werkzeug.exceptions import BadRequest
 from signal import signal, SIGTERM
 
-# do not edit! added by PythonBreakpoints
-from pdb import set_trace as _breakpoint
-
-
 CMDFILE = None
 CMD_ENABLED = False
 LOG_ENABLED = False
-URL_REGEX = re.compile(r'^/(\w+)(?:/([\w\d\.\-]+)?)?$')
+URL_REGEX = re.compile(r'^/(\w+)(?:/([\w\d\.\+\-\s]+)?)?$')
 NAGIOS = None
 NLOG = []
 NLOGLINES = 0
 ALLOW_ORIGIN = None
-PID_FILE = "nagios-api.pid"
+PID_FILE = "/var/run/nagios-api.pid"
 CFG_DIRECTORY = "/usr/local/nagios/etc/objects"
+
 
 def _send_json(req, success, content):
     '''Internal JSON sender.
@@ -85,6 +86,26 @@ def json_response(req, msg):
 
     '''
     return _send_json(req, True, msg)
+
+
+def http_problems(req, objid, reqobj):
+    '''Get a host->service mapping for "All Problems". This is
+    the method to use to get the data needed to display a simmilar
+    view to the nagios "Problems" view.
+
+    '''
+    global NAGIOS
+    if objid is not None:
+        return json_error(req, 'Unexpected object ID.')
+
+    hosts = {}
+    for host, host_data in NAGIOS.for_json().items():
+        for service,service_data in host_data['services'].items():
+            if (int(service_data['current_state']) == 0):
+                del host_data['services'][service]
+        if host_data['services']:
+            hosts[host] = host_data
+    return json_response(req, hosts)
 
 
 def http_state(req, objid, reqobj):
@@ -135,7 +156,6 @@ def http_host(req, objid, reqobj):
     Shows all of the variables for the host object.
     '''
     global NAGIOS
-    sys.stdout.write("objid = %s" % objid)
     if not objid:
         return json_error(req, 'No hostname provided.')
     elif objid not in NAGIOS.hosts.keys():
@@ -147,7 +167,7 @@ def http_host(req, objid, reqobj):
     for host_key in host_keys:
         value = getattr(NAGIOS.hosts[objid], host_key)
         if type(value) == types.StringType:
-            ret[host_key] = value 
+            ret[host_key] = value
         # return comment and downtime data too, if either exists
         elif type(value) == dict:
             for k, v in value.iteritems():
@@ -160,6 +180,7 @@ def http_host(req, objid, reqobj):
         for svc in NAGIOS.services[objid]:
             ret['services'].append(svc)
     return json_response(req, ret)
+
 
 def _mkdir_recursive(self, path):
     sub_path = os.path.dirname(path)
@@ -229,6 +250,7 @@ def http_update_host(req, objid, reqobj):
         ret = {}
         ret['message'] = "Unable to write file: "+file_path
         return json_response(req, ret)
+
 
 def http_service(req, objid, reqobj):
     '''Get a view of a single service on one host.
@@ -361,7 +383,7 @@ def http_schedule_downtime(req, objid, reqobj):
     except ValueError:
         dur = 0
     end_time = reqobj.get('end_time', start_time + dur)
-    
+
     obj = NAGIOS.host_or_service(host, service)
     if obj is None:
         return json_error(req, 'Host or service not found.')
@@ -420,7 +442,7 @@ def http_cancel_downtime(req, objid, reqobj):
     for dt in dts:
         if res is None:
             res = True  # So we know if we found any.
-        res = cancel_downtime(dt) and res        
+        res = cancel_downtime(dt) and res
 
     if res is not None:
         if res:
@@ -433,7 +455,7 @@ def http_cancel_downtime(req, objid, reqobj):
 
 
 def http_schedule_hostgroup_downtime(req, objid, reqobj):
-    '''Given a hostgroup, schedule downtime for all the hosts in the hostgroup. 
+    '''Given a hostgroup, schedule downtime for all the hosts in the hostgroup.
     The main mode for this API is to schedule a hard downtime that starts now and ends
     after so many seconds.
 
@@ -460,7 +482,7 @@ def http_schedule_hostgroup_downtime(req, objid, reqobj):
     except ValueError:
         dur = 0
     end_time = reqobj.get('end_time', start_time + dur)
-    
+
     if hostgroup is None:
         return json_error(req, 'Hostgroup not specified.')
     if dur < 60 or dur > 86400 * 7:  # Upper limit?
@@ -551,7 +573,7 @@ def http_acknowledge_problem(req, objid, reqobj):
 
     author (string): This is the name displayed as the creator of the
     acknowledgement. This will default to 'nagios-api'.
-    
+
     '''
     global NAGIOS, CMD_ENABLED
     if not CMD_ENABLED:
@@ -580,7 +602,7 @@ def http_acknowledge_problem(req, objid, reqobj):
         return json_error(req, 'Invalid value provided for one or more of sticky, notify or persistent')
 
     if obj.service is not None:
-        if not send_nagios_command('ACKNOWLEDGE_SVC_PROBLEM', host, service, 
+        if not send_nagios_command('ACKNOWLEDGE_SVC_PROBLEM', host, service,
                                     sticky, notify, persistent, author, comment):
             return json_error(req, 'Failed sending command to Nagios.')
     else:
@@ -637,7 +659,7 @@ def http_add_comment(req, objid, reqobj):
 
     author (string): This is the name displayed as the creator of the
     comment. This will default to 'nagios-api'.
-    
+
     '''
     global NAGIOS, CMD_ENABLED
     if not CMD_ENABLED:
@@ -662,7 +684,7 @@ def http_add_comment(req, objid, reqobj):
         return json_error(req, 'Invalid value provided for persistent')
 
     if obj.service is not None:
-        if not send_nagios_command('ADD_SVC_COMMENT', host, service, 
+        if not send_nagios_command('ADD_SVC_COMMENT', host, service,
                                     persistent, author, comment):
             return json_error(req, 'Failed sending command to Nagios.')
     else:
@@ -803,6 +825,7 @@ def http_handler(req):
     # All requests should follow this very simple format.
     global URL_REGEX
     url = req.script_root + req.path
+    url = urllib.unquote(url).decode('utf8')
     res = URL_REGEX.match(url)
     if res is None:
         return json_error(req, 'Invalid request URI')
@@ -833,6 +856,8 @@ def http_handler(req):
             'state': http_state,
             'objects': http_objects,
             'host': http_host,
+            'service': http_service,
+            'problems': http_problems,
             'status': http_status,
             'service': http_service,
             'restart_nagios': http_restart_nagios

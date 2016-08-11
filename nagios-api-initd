@@ -19,7 +19,7 @@ LOGFILE="/var/log/nagios/nagios-api.log"
 
 NAG_API_BIN=/usr/bin/nagios-api
 NAG_API_PORT=6315
-NAG_API_PID=$PROG.pid
+NAG_API_PID=/var/run/$PROG.pid
 
 NAGIOS_STATUS_FILE=/var/log/nagios/status.dat
 NAGIOS_COMMAND_FILE=/var/spool/nagios/cmd/nagios.cmd

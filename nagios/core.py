@@ -2,8 +2,6 @@
 #
 # core Nagios classes.
 #
-import os
-
 
 class Nagios:
     '''This class represents the current state of a Nagios installation, as read
@@ -93,7 +91,7 @@ class Nagios:
         for c in self.comments.itervalues():
             tmp = self.host_or_service(c.host, c.service)
             if (tmp is None):
-                # FIXME: throw something? 
+                # FIXME: throw something?
                 pass
             else:
                 tmp.attach_comment(c)
