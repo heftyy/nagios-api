@@ -15,7 +15,6 @@ contributors. See the LICENSE file for full licensing information.
 '''
 
 
-import datetime
 import os
 import re
 import sys
@@ -23,8 +22,6 @@ import time
 import types
 import atexit
 import urllib
-import pwd
-import grp
 import pwd
 import grp
 import subprocess
@@ -198,7 +195,7 @@ def http_restart_nagios(req, objid, reqobj):
     restart_service('nagios')
     return json_response(req, 'Restart successful')
 
-def http_send_raw_command(req, objid, reqbj):
+def http_send_raw_command(req, objid, reqobj):
     command = reqobj['command']
     if not command:
         return json_error(req, "Missing command to send to nagios")
